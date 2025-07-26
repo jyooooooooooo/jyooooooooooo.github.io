@@ -208,39 +208,6 @@ footer img {
         padding: 15px;
         width: 100%; 
     }
-    .folder-grid {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    flex-wrap: wrap;
-    margin-top: 40px;
-    width: 100%;
-    max-width: 1200px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.folder {
-    font-size: 50px;
-    text-decoration: none;
-    text-align: center;
-    color: #5a3e1b;
-    background-color: rgba(245, 222, 179, 0.85); 
-    padding: 30px 40px;
-    border-radius: 20px;
-    box-shadow: 0 4px 10px rgba(90, 62, 27, 0.3);
-    transition: transform 0.2s ease, background-color 0.3s ease, color 0.3s ease;
-    user-select: none;
-}
-
-.folder:hover {
-    transform: scale(1.05);
-    background-color: rgba(222, 184, 135, 0.95); 
-    color: #3e2a0f;
-    cursor: pointer;
-}
-
-
 }
 
 @media screen and (min-width: 769px) {
@@ -275,4 +242,37 @@ footer img {
     font-style: normal;
 }
 
+/* ===============================
+   📁 Folder Grid Styles (Desktop Look)
+   =============================== */
 
+.folder-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 60px;
+    padding: 20px;
+}
+
+.folder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100px;
+    text-decoration: none;
+    color: #ffffff;
+    font-size: 14px;
+    transition: transform 0.2s ease;
+}
+
+.folder img {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 10px;
+}
+
+.folder:hover {
+    transform: scale(1.05);
+    color: #ffe4b5;
+}
