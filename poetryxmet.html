@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Random Poem Explorer</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <title>cheeky poem explorer</title>
   <style>
     body, html {
       margin: 0;
@@ -14,16 +13,18 @@
       background-position: center;
       background-repeat: no-repeat;
       transition: background-image 1s ease-in-out;
+      color: #333;
     }
 
     .overlay {
-      backdrop-filter: blur(4px);
-      background-color: rgba(255, 255, 255, 0.6);
+      background-color: rgba(255, 255, 255, 0.3); 
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      backdrop-filter: blur(2px);
+      padding: 20px;
     }
 
     #searchBar {
@@ -33,15 +34,19 @@
       margin-bottom: 20px;
       border-radius: 6px;
       width: 300px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
 
     #poemBox {
-      background: white;
+      background: rgba(255, 255, 255, 0.85);
       padding: 30px;
       border-radius: 12px;
-      max-width: 600px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      max-width: 700px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
       white-space: pre-wrap;
+      font-size: 16px;
+      line-height: 1.6;
+      text-align: center;
     }
   </style>
 </head>
@@ -52,20 +57,21 @@
   </div>
 
   <script>
-    const zipUrl = "https://raw.githubusercontent.com/jyooooooooooo/jyooooooooooo.github.io/main/poetryfoundationarchive.zip"; 
+    const csvUrl = "https://raw.githubusercontent.com/jyooooooooooo/jyooooooooooo.github.io/main/PoetryFoundationData.csv";
 
     let poems = [];
 
-    async function loadPoems() {
-      const response = await fetch(zipUrl);
-      const blob = await response.blob();
-      const zip = await JSZip.loadAsync(blob);
-      const files = Object.values(zip.files).filter(file => file.name.endsWith(".txt"));
-      
-      for (const file of files) {
-        const content = await file.async("string");
-        poems.push({ name: file.name, content });
-      }
+    async function loadPoemsFromCSV() {
+      const res = await fetch(csvUrl);
+      const text = await res.text();
+      const lines = text.split("\n").slice(1); 
+      poems = lines.map(line => {
+        const columns = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); 
+        const title = columns[0]?.replace(/^"|"$/g, "").trim();
+        const author = columns[1]?.replace(/^"|"$/g, "").trim();
+        const content = columns[2]?.replace(/^"|"$/g, "").replace(/\\n/g, "\n").trim();
+        return { title, author, content };
+      }).filter(p => p.content);
     }
 
     async function fetchMetImageUrls(tag) {
@@ -89,10 +95,14 @@
     async function updatePoemAndBackground(searchTerm) {
       const matched = poems.filter(p => p.content.toLowerCase().includes(searchTerm.toLowerCase()));
       const randomPoem = matched.length > 0
-        ? matched[Math.floor(Math.random() * matched.length)].content
-        : "No poem found for this search term.";
+        ? matched[Math.floor(Math.random() * matched.length)]
+        : null;
 
-      document.getElementById("poemBox").textContent = randomPoem;
+      if (randomPoem) {
+        document.getElementById("poemBox").textContent = `${randomPoem.title} — ${randomPoem.author}\n\n${randomPoem.content}`;
+      } else {
+        document.getElementById("poemBox").textContent = "No poem found for this search term.";
+      }
 
       const images = await fetchMetImageUrls(searchTerm);
       if (images.length > 0) {
@@ -104,10 +114,11 @@
     document.getElementById("searchBar").addEventListener("keydown", async (e) => {
       if (e.key === "Enter") {
         const searchTerm = e.target.value.trim();
-        if (!poems.length) await loadPoems();
+        if (!poems.length) await loadPoemsFromCSV();
         await updatePoemAndBackground(searchTerm);
       }
     });
   </script>
 </body>
 </html>
+
