@@ -8,5 +8,124 @@
   <link rel="stylesheet" href="designdesign.css">
    <div class="search">
   <input type="text" placeholder="Search..">
+
+
+     
 </div> 
+</html>
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Random Poem Explorer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: sans-serif;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+    }
+
+    .overlay {
+      backdrop-filter: blur(4px);
+      background-color: rgba(255, 255, 255, 0.6);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #searchBar {
+      padding: 10px 20px;
+      font-size: 18px;
+      border: none;
+      margin-bottom: 20px;
+      border-radius: 6px;
+      width: 300px;
+    }
+
+    #poemBox {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 600px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <input type="text" id="searchBar" placeholder="Type a word (e.g., 'orange')">
+    <div id="poemBox">Type a word to get a random poem...</div>
+  </div>
+
+  <script>
+    const zipUrl = "https://raw.githubusercontent.com/jyooooooooooo/jyooooooooooo.github.io/main/poetryfoundationarchive.zip"; 
+
+    let poems = [];
+
+    async function loadPoems() {
+      const response = await fetch(zipUrl);
+      const blob = await response.blob();
+      const zip = await JSZip.loadAsync(blob);
+      const files = Object.values(zip.files).filter(file => file.name.endsWith(".txt"));
+      
+      for (const file of files) {
+        const content = await file.async("string");
+        poems.push({ name: file.name, content });
+      }
+    }
+
+    async function fetchMetImageUrls(tag) {
+      const searchUrl = `https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&q=${encodeURIComponent(tag)}`;
+      const searchRes = await fetch(searchUrl);
+      const { objectIDs } = await searchRes.json();
+      if (!objectIDs || objectIDs.length === 0) return [];
+
+      const shuffled = objectIDs.sort(() => 0.5 - Math.random()).slice(0, 5);
+
+      const imageUrls = await Promise.all(shuffled.map(async id => {
+        const objUrl = `https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`;
+        const res = await fetch(objUrl);
+        const data = await res.json();
+        return data.primaryImage || null;
+      }));
+
+      return imageUrls.filter(Boolean);
+    }
+
+    async function updatePoemAndBackground(searchTerm) {
+      const matched = poems.filter(p => p.content.toLowerCase().includes(searchTerm.toLowerCase()));
+      const randomPoem = matched.length > 0
+        ? matched[Math.floor(Math.random() * matched.length)].content
+        : "No poem found for this search term.";
+
+      document.getElementById("poemBox").textContent = randomPoem;
+
+      const images = await fetchMetImageUrls(searchTerm);
+      if (images.length > 0) {
+        const randomBg = images[Math.floor(Math.random() * images.length)];
+        document.body.style.backgroundImage = `url(${randomBg})`;
+      }
+    }
+
+    document.getElementById("searchBar").addEventListener("keydown", async (e) => {
+      if (e.key === "Enter") {
+        const searchTerm = e.target.value.trim();
+        if (!poems.length) await loadPoems();
+        await updatePoemAndBackground(searchTerm);
+      }
+    });
+  </script>
+</body>
 </html>
